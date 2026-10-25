@@ -1,0 +1,23 @@
+{
+  "name": "edoms-backend",
+  "version": "1.0.0",
+  "description": "Express + MongoDB API for the Electrical Design Office Management System (EDOMS)",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node seed.js",
+    "test": "node --test tests/api.test.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.0"
+  }
+}

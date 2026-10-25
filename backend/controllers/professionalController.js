@@ -1,0 +1,42 @@
+import Professional from "../models/Professional.js";
+import Project from "../models/Project.js";
+import { isValidId, validateProfessional } from "../utils/validation.js";
+
+const NOT_FOUND = { message: "Professional not found." };
+
+// GET /api/professionals
+export async function getProfessionals(req, res) {
+  res.json(await Professional.find().sort({ name: 1 }));
+}
+
+// POST /api/professionals
+export async function createProfessional(req, res) {
+  const { errors, data } = validateProfessional(req.body);
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
+  }
+  res.status(201).json(await Professional.create(data));
+}
+
+// PUT /api/professionals/:id
+export async function updateProfessional(req, res) {
+  if (!isValidId(req.params.id)) return res.status(404).json(NOT_FOUND);
+  const { errors, data } = validateProfessional(req.body);
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
+  }
+  const professional = await Professional.findByIdAndUpdate(req.params.id, data, { new: true });
+  if (!professional) return res.status(404).json(NOT_FOUND);
+  res.json(professional);
+}
+
+// DELETE /api/professionals/:id
+export async function deleteProfessional(req, res) {
+  if (!isValidId(req.params.id)) return res.status(404).json(NOT_FOUND);
+  const professional = await Professional.findByIdAndDelete(req.params.id);
+  if (!professional) return res.status(404).json(NOT_FOUND);
+  // Projects keep existing, they just lose the link to this person.
+  await Project.updateMany({ design_engineer: req.params.id }, { design_engineer: null });
+  await Project.updateMany({ draughtsman: req.params.id }, { draughtsman: null });
+  res.status(204).end();
+}
