@@ -3,6 +3,12 @@ import Project from "../models/Project.js";
 import { isValidId, validateProfessional } from "../utils/validation.js";
 
 const NOT_FOUND = { message: "Professional not found." };
+// Check whether another professional already uses this ID.
+async function professionalIdIsTaken(professionalId, currentId) {
+  if (!professionalId) return false;
+  const other = await Professional.findOne({ professional_id: professionalId });
+  return Boolean(other) && String(other._id) !== currentId;
+}
 
 // GET /api/professionals
 export async function getProfessionals(req, res) {
@@ -12,6 +18,9 @@ export async function getProfessionals(req, res) {
 // POST /api/professionals
 export async function createProfessional(req, res) {
   const { errors, data } = validateProfessional(req.body);
+  if (!errors.professional_id && (await professionalIdIsTaken(data.professional_id))) {
+  errors.professional_id = "A professional with this ID already exists.";
+}
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
   }
@@ -22,6 +31,9 @@ export async function createProfessional(req, res) {
 export async function updateProfessional(req, res) {
   if (!isValidId(req.params.id)) return res.status(404).json(NOT_FOUND);
   const { errors, data } = validateProfessional(req.body);
+  if (!errors.professional_id && (await professionalIdIsTaken(data.professional_id, req.params.id))) {
+  errors.professional_id = "A professional with this ID already exists.";
+}
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
   }

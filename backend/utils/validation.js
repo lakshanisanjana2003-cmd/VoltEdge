@@ -25,6 +25,7 @@ function isRealDate(text) {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
+const BUSINESS_ID_PATTERN = /^[A-Z0-9-]{3,20}$/;
 
 export function validateProject(body = {}) {
   const errors = {};
@@ -93,6 +94,7 @@ export function validateProject(body = {}) {
 export function validateClient(body = {}) {
   const errors = {};
   const data = {
+    client_id: cleanText(body.client_id)?.toUpperCase() ?? null,
     name: cleanText(body.name),
     company: cleanText(body.company),
     contact_person: cleanText(body.contact_person),
@@ -102,6 +104,9 @@ export function validateClient(body = {}) {
     notes: cleanText(body.notes),
   };
   if (!data.name || data.name.length < 2) errors.name = "Client name is required.";
+  if (data.client_id && !BUSINESS_ID_PATTERN.test(data.client_id)) {
+  errors.client_id = "Use 3–20 letters, numbers or dashes, for example CL-001.";
+}
   if (data.email && !EMAIL_PATTERN.test(data.email)) errors.email = "Enter a valid email.";
   if (data.phone && !PHONE_PATTERN.test(data.phone)) errors.phone = "Enter a valid phone number.";
   return { errors, data };
@@ -110,14 +115,19 @@ export function validateClient(body = {}) {
 export function validateProfessional(body = {}) {
   const errors = {};
   const data = {
+    professional_id: cleanText(body.professional_id)?.toUpperCase() ?? null,
     name: cleanText(body.name),
     role: cleanText(body.role),
     organization: cleanText(body.organization),
+    qualifications: cleanText(body.qualifications),
     phone: cleanText(body.phone),
     email: cleanText(body.email),
     notes: cleanText(body.notes),
   };
   if (!data.name || data.name.length < 2) errors.name = "Name is required.";
+  if (data.professional_id && !BUSINESS_ID_PATTERN.test(data.professional_id)) {
+  errors.professional_id = "Use 3–20 letters, numbers or dashes, for example PR-001.";
+}
   if (!data.role) errors.role = "Professional role is required.";
   else if (!PROFESSIONAL_ROLES.includes(data.role)) errors.role = "Unknown professional role.";
   if (data.email && !EMAIL_PATTERN.test(data.email)) errors.email = "Enter a valid email.";

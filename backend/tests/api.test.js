@@ -1,12 +1,23 @@
 // Automated API tests. They need a running MongoDB and use a separate database
 // ("edoms_test") that is emptied at the start. Run with:  npm test
+import "dotenv/config"; 
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import mongoose from "mongoose";
 import app from "../app.js";
 
 process.env.JWT_SECRET = "test-secret-for-automated-tests";
-const TEST_URI = process.env.MONGODB_URI_TEST ?? "mongodb://127.0.0.1:27017/edoms_test";
+// Safety: the tests delete their whole database, so MONGODB_URI_TEST is required (no default).
+// Its database name must end with _test and must NOT be the database in MONGODB_URI.
+const dbNameOf = (uri) => /^mongodb(?:\+srv)?:\/\/[^/?#]*\/([^/?#]*)/.exec(uri ?? "")?.[1] ?? "";
+const REAL_DB_NAME = dbNameOf(process.env.MONGODB_URI); // only read to compare, never used to connect
+const isSafeTestDb = (name) => /.+_test$/.test(name) && name !== REAL_DB_NAME;
+
+const TEST_URI = process.env.MONGODB_URI_TEST;
+if (!TEST_URI) throw new Error("MONGODB_URI_TEST is not set. Tests did not run.");
+if (!isSafeTestDb(dbNameOf(TEST_URI))) {
+  throw new Error("MONGODB_URI_TEST must use a database whose name ends with _test and is not your real database. Tests did not run.");
+}
 
 let server;
 let baseUrl;
@@ -30,17 +41,30 @@ const validProject = {
 
 before(async () => {
   await mongoose.connect(TEST_URI);
+
+  if (!isSafeTestDb(mongoose.connection.name)) {
+    await mongoose.disconnect();
+    throw new Error(`Refusing to delete database "${mongoose.connection.name}".`);
+  }
+
   await mongoose.connection.dropDatabase();
-  await Promise.all(Object.values(mongoose.models).map((model) => model.init())); // build unique indexes
+
+  await Promise.all(
+    Object.values(mongoose.models).map((model) => model.init())
+  );
+
   server = app.listen(0);
   baseUrl = `http://127.0.0.1:${server.address().port}`;
 });
 
 after(async () => {
-  server.close();
+ server?.close();
+if (isSafeTestDb(mongoose.connection.name)) {
   await mongoose.connection.dropDatabase();
+}
   await mongoose.disconnect();
 });
+
 
 describe("authentication", () => {
   it("rejects data requests without a token", async () => {
@@ -208,6 +232,88 @@ describe("clients and professionals", () => {
     assert.equal(updated.body.name, "Ministry Uno");
     assert.equal((await api("DELETE", "/clients/" + created.body._id)).status, 204);
     assert.equal((await api("PUT", "/clients/" + created.body._id, { name: "Gone" })).status, 404);
+  });
+  
+  it("saves a client ID in capitals and rejects duplicates", async () => {
+    const first = await api("POST", "/clients", { name: "ID Client One", client_id: "cl-001" });
+    assert.equal(first.status, 201);
+    assert.equal(first.body.client_id, "CL-001");
+
+    const duplicate = await api("POST", "/clients", { name: "ID Client Two", client_id: "CL-001" });
+    assert.equal(duplicate.status, 400);
+    assert.equal(duplicate.body.errors.client_id, "A client with this ID already exists.");
+
+    const second = await api("POST", "/clients", { name: "ID Client Two", client_id: "CL-002" });
+    const clash = await api("PUT", "/clients/" + second.body._id, { name: "ID Client Two", client_id: "cl-001" });
+    assert.equal(clash.status, 400);
+
+    // A client may keep its own ID when it is edited.
+    const same = await api("PUT", "/clients/" + first.body._id, { name: "Renamed", client_id: "CL-001" });
+    assert.equal(same.status, 200);
+  });
+
+  it("rejects a badly formatted client ID", async () => {
+    const res = await api("POST", "/clients", { name: "Bad ID Client", client_id: "CL 1" });
+    assert.equal(res.status, 400);
+    assert.ok(res.body.errors.client_id);
+  });
+
+    it("saves a professional ID in capitals and rejects duplicates", async () => {
+    const first = await api("POST", "/professionals", {
+      name: "ID Pro One",
+      role: "Draughtsman",
+      professional_id: "pr-001",
+      qualifications: "BSc Electrical Engineering",
+    });
+
+    assert.equal(first.status, 201);
+    assert.equal(first.body.professional_id, "PR-001");
+    assert.equal(first.body.qualifications, "BSc Electrical Engineering");
+
+    const duplicate = await api("POST", "/professionals", {
+      name: "ID Pro Two",
+      role: "Draughtsman",
+      professional_id: "PR-001",
+    });
+
+    assert.equal(duplicate.status, 400);
+    assert.equal(
+      duplicate.body.errors.professional_id,
+      "A professional with this ID already exists."
+    );
+
+    const second = await api("POST", "/professionals", {
+      name: "ID Pro Two",
+      role: "Draughtsman",
+      professional_id: "PR-002",
+    });
+
+    const clash = await api("PUT", "/professionals/" + second.body._id, {
+      name: "ID Pro Two",
+      role: "Draughtsman",
+      professional_id: "pr-001",
+    });
+
+    assert.equal(clash.status, 400);
+
+    const same = await api("PUT", "/professionals/" + first.body._id, {
+      name: "Renamed Pro",
+      role: "Draughtsman",
+      professional_id: "PR-001",
+    });
+
+    assert.equal(same.status, 200);
+  });
+
+  it("rejects a badly formatted professional ID", async () => {
+    const res = await api("POST", "/professionals", {
+      name: "Bad ID Pro",
+      role: "Draughtsman",
+      professional_id: "PR 1",
+    });
+
+    assert.equal(res.status, 400);
+    assert.ok(res.body.errors.professional_id);
   });
 });
 
