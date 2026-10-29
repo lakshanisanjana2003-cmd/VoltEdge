@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { listClients, listProfessionals, saveProject } from "@/lib/api";
 import { BUILDING_TYPES, PROJECT_PRIORITIES, PROJECT_STATUSES } from "@/lib/constants";
-import { onlyDate, validateProject } from "@/lib/projectHelpers";
+import { nameWithId, onlyDate, validateProject } from "@/lib/projectHelpers";
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
-// Turns a saved project into the text values used by the form inputs.
+// Turns saved project into text values used by form inputs.
 function projectToForm(project, suggestedCode) {
   return {
     project_code: project?.project_code ?? suggestedCode ?? "",
@@ -37,7 +37,7 @@ function projectToForm(project, suggestedCode) {
   };
 }
 
-// Add / edit project form. "project" is empty when adding a new project.
+// Add / edit project form "project" is empty adding a project.
 export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
   const [values, setValues] = useState(projectToForm(project, suggestedCode));
   const [errors, setErrors] = useState({});
@@ -45,7 +45,7 @@ export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
   const [clients, setClients] = useState([]);
   const [professionals, setProfessionals] = useState([]);
 
-  // Fill the client and professional drop-downs from the database.
+  // Fill client ,professional drop-downs from database.
   useEffect(() => {
     listClients().then(setClients).catch(() => {});
     listProfessionals().then(setProfessionals).catch(() => {});
@@ -59,7 +59,7 @@ export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
     event.preventDefault();
     const problems = validateProject(values);
     setErrors(problems);
-    if (Object.keys(problems).length > 0) return; // do not call the server
+    if (Object.keys(problems).length > 0) return; // do not call server
 
     setSaving(true);
     try {
@@ -67,7 +67,7 @@ export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
       toast.success(project ? "Project updated" : "Project created");
       onSaved();
     } catch (error) {
-      // The server checks everything again. Show its messages next to the fields.
+      // The server checks everything again. Show its messages next to fields.
       if (error.fieldErrors) setErrors(error.fieldErrors);
       toast.error(error.message);
     } finally {
@@ -75,7 +75,7 @@ export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
     }
   }
 
-  // A label + input + error message.
+  // label + input + error message.
   function field(name, label, input) {
     return (
       <div className="space-y-1.5">
@@ -103,7 +103,7 @@ export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
   }
 
   const plainOptions = (list) => list.map((item) => ({ value: item, label: item }));
-  const personOptions = (list) => list.map((item) => ({ value: item._id, label: item.name }));
+  const personOptions = (list) => list.map((item) => ({ value: item._id, label: nameWithId(item) }));
   const engineers = professionals.filter((p) => p.role === "Electrical Design Engineer" || p.role === "Electrical Engineer");
   const draughtsmen = professionals.filter((p) => p.role === "Draughtsman");
 

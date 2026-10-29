@@ -1,11 +1,14 @@
-// Small functions about projects. They do not use React, so they are easy to test.
 
-// Dates from MongoDB look like "2026-06-01T00:00:00.000Z". We only need "2026-06-01".
+export function nameWithId(person) {
+  if (!person) return "";
+  return `${person.client_id || person.professional_id} – ${person.name}`;
+}
+
 export function onlyDate(value) {
   return value ? value.slice(0, 10) : "";
 }
 
-// Projects are numbered P001, P002 ... This finds the next free number.
+// Projects numbered P001, P002 This finds the next free number.
 export function nextProjectCode(codes) {
   const numbers = [];
   for (const code of codes) {

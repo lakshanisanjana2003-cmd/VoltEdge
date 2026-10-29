@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { deleteProject, getProject } from "@/lib/api";
-import { onlyDate } from "@/lib/projectHelpers";
+import { nameWithId, onlyDate } from "@/lib/projectHelpers";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
@@ -12,23 +12,16 @@ import { Panel } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Project tabs that are not built yet.
+// Project tabs  are not built yet.
 const NOT_BUILT_TABS = [
   { value: "design", label: "Design & Calculations" },
   { value: "boq", label: "Estimate & BOQ" },
   { value: "specs", label: "Specifications" },
-  { value: "drawings", label: "Drawings" },
   { value: "circuits", label: "Boards & Circuits" },
   { value: "sld", label: "SLDs" },
-  { value: "documents", label: "Documents & Attachments" },
-  { value: "tender", label: "Tender" },
-  { value: "materials", label: "Material Approvals" },
-  { value: "visits", label: "Site Visits" },
-  { value: "testing", label: "Testing" },
-  { value: "payments", label: "Payments" },
 ];
 
-// One label + value pair.
+// One label + value
 function Info({ label, value }) {
   return (
     <div>
@@ -100,7 +93,7 @@ export default function ProjectDetailsPage() {
           <div className="lg:col-span-2">
             <Panel title="Project information">
               <dl className="grid gap-4 sm:grid-cols-2">
-                <Info label="Client" value={project.client?.name} />
+                <Info label="Client" value={nameWithId(project.client)} />
                 <Info label="Building type" value={project.building_type} />
                 <Info label="Location" value={project.location} />
                 <Info label="Main contractor" value={project.main_contractor} />
@@ -138,8 +131,8 @@ export default function ProjectDetailsPage() {
             </Panel>
             <Panel title="Assigned professionals">
               <dl className="space-y-3">
-                <Info label="Design engineer" value={project.design_engineer?.name} />
-                <Info label="Draughtsman" value={project.draughtsman?.name} />
+                <Info label="Design engineer" value={nameWithId(project.design_engineer)} />
+                <Info label="Draughtsman" value={nameWithId(project.draughtsman)} />
               </dl>
             </Panel>
             <Panel title="Recent activity">

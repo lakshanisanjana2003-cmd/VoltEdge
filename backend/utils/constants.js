@@ -1,4 +1,4 @@
-// Fixed option lists. Keep these the same as frontend/src/lib/constants.js
+
 export const PROJECT_STATUSES = ["Planned", "Ongoing", "On Hold", "Completed"];
 export const PROJECT_PRIORITIES = ["Not recorded", "Low", "Medium", "High", "Urgent"];
 export const BUILDING_TYPES = [
@@ -26,3 +26,7 @@ export const PROFESSIONAL_ROLES = [
   "Inspector",
   "Other",
 ];
+export const DOCUMENT_TYPES = ["Tender Drawing", "Construction Drawing", "Shop Drawing", "As built Drawing", "Other"];
+export const DRAWING_STATUSES = ["Draft", "Issued for review", "Approved", "Superseded"];
+export const VISIT_STATUSES = ["Scheduled", "Completed", "Cancelled"];
+export const TEST_RESULTS = ["Pending", "Pass", "Fail"];

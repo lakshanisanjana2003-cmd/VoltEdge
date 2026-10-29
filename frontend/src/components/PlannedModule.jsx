@@ -1,7 +1,7 @@
 import { Construction } from "lucide-react";
 import { PageHeader } from "./PageHeader";
 
-// Shown for pages that are not built yet.
+// Shown for pages that not built yet.
 export function PlannedModule({ title, items }) {
   return (
     <div>

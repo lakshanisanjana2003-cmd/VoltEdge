@@ -1,4 +1,4 @@
-# EDOMS – Electrical Design Office Management System
+# VoltEdge – Electrical Design Office Management System
 
 A web app for an electrical design office to manage **projects, clients and professionals**.
 Made for the Web Application Development mini project with the **MERN stack**.
@@ -66,13 +66,13 @@ If you open the frontend on another address, add it to `CLIENT_ORIGIN` in `backe
 6. **Persistence – refresh:** press F5. The project is still there.
 7. **Persistence – restart:** stop the backend (Ctrl+C in terminal 1), start it again with `npm run dev`, reload the page. The project is still there.
 8. **Delete:** click the bin icon → confirm *Delete*. The project is removed, and stays removed after a refresh.
-9. **Look in MongoDB:** open MongoDB Compass, connect to `mongodb://127.0.0.1:27017`, open database `edoms` → collection `projects`. You can see the same documents.
+9. **Look in MongoDB:** open MongoDB Compass, connect to `mongodb://127.0.0.1:27017`, open database `voltedge` → collection `projects`. You can see the same documents.
 
 More checks are in `docs/TESTING_CHECKLIST.md`.
 
 ## Automated tests
 ```bash
-cd backend  && npm test     # 23 API tests (needs MongoDB running; uses a separate database "edoms_test")
+cd backend  && npm test     # 23 API tests (needs MongoDB running; uses a separate database "voltedge_test")
 cd frontend && npm test     # 13 tests for the helper functions
 ```
 

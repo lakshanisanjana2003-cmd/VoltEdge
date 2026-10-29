@@ -1,6 +1,5 @@
-// After signing in, the API sends a token. We keep it in localStorage
-// and send it with every request so the server knows who we are.
-const TOKEN_KEY = "edoms_token";
+
+const TOKEN_KEY = "voltedge_token";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

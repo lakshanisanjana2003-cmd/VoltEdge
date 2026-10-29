@@ -1,9 +1,11 @@
 import Professional from "../models/Professional.js";
 import Project from "../models/Project.js";
 import { isValidId, validateProfessional } from "../utils/validation.js";
+import SiteVisit from "../models/SiteVisit.js";
+import TestRecord from "../models/TestRecord.js";
 
 const NOT_FOUND = { message: "Professional not found." };
-// Check whether another professional already uses this ID.
+// Check whether another professional already use this ID.
 async function professionalIdIsTaken(professionalId, currentId) {
   if (!professionalId) return false;
   const other = await Professional.findOne({ professional_id: professionalId });
@@ -50,5 +52,45 @@ export async function deleteProfessional(req, res) {
   // Projects keep existing, they just lose the link to this person.
   await Project.updateMany({ design_engineer: req.params.id }, { design_engineer: null });
   await Project.updateMany({ draughtsman: req.params.id }, { draughtsman: null });
+  await SiteVisit.updateMany({ visited_by: req.params.id }, { visited_by: null });
+  await TestRecord.updateMany({ tested_by: req.params.id }, { tested_by: null });
   res.status(204).end();
+}
+
+// GET /api/professionals/me   (the signed-in user's profile)
+export async function getMyProfessional(req, res) {
+  const profile = await Professional.findOne({ user: req.user.id });
+  if (!profile) return res.status(404).json({ message: "You have no professional profile yet." });
+  res.json(profile);
+}
+
+// POST /api/professionals/me   (create my profile; only one for one account)
+export async function createMyProfessional(req, res) {
+  if (await Professional.exists({ user: req.user.id })) {
+    return res.status(400).json({ message: "You already have a professional profile." });
+  }
+  const { errors, data } = validateProfessional(req.body);
+  if (!errors.professional_id && (await professionalIdIsTaken(data.professional_id))) {
+    errors.professional_id = "A professional with this ID already exists.";
+  }
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
+  }
+  res.status(201).json(await Professional.create({ ...data, user: req.user.id }));
+}
+
+// PUT /api/professionals/me   (edit my own profile)
+export async function updateMyProfessional(req, res) {
+  const profile = await Professional.findOne({ user: req.user.id });
+  if (!profile) return res.status(404).json({ message: "You have no professional profile yet." });
+  const { errors, data } = validateProfessional(req.body);
+  if (!errors.professional_id && (await professionalIdIsTaken(data.professional_id, String(profile._id)))) {
+    errors.professional_id = "A professional with this ID already exists.";
+  }
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
+  }
+  profile.set(data); // "user" is not in data, so link to account never changes
+  await profile.save();
+  res.json(profile);
 }

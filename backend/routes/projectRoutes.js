@@ -3,7 +3,7 @@ import { createProject, deleteProject, getProject, getProjects, updateProject } 
 import { requireLogin } from "../middleware/authMiddleware.js";
 
 const router = Router();
-router.use(requireLogin); // every project route needs a signed-in staff member
+router.use(requireLogin); // project route needs signedin member
 
 router.get("/", getProjects);
 router.post("/", createProject);

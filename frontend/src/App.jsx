@@ -1,15 +1,17 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { getToken } from "@/lib/auth";
-import { PLANNED_PAGES } from "@/lib/constants";
 import { AppShell } from "@/components/AppShell";
-import { PlannedModule } from "@/components/PlannedModule";
 import AuthPage from "@/pages/AuthPage";
 import DashboardPage from "@/pages/DashboardPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectDetailsPage from "@/pages/ProjectDetailsPage";
 import ClientsPage from "@/pages/ClientsPage";
 import ProfessionalsPage from "@/pages/ProfessionalsPage";
+import DrawingsPage from "@/pages/DrawingsPage";
+import SiteVisitsPage from "@/pages/SiteVisitsPage";
+import TestingPage from "@/pages/TestingPage";
 import SettingsPage from "@/pages/SettingsPage";
+import UsersPage from "@/pages/UsersPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 // Every page except the sign-in page needs a saved login token.
@@ -29,10 +31,11 @@ export default function App() {
         <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
         <Route path="/clients" element={<ClientsPage />} />
         <Route path="/professionals" element={<ProfessionalsPage />} />
+        <Route path="/drawings" element={<DrawingsPage />} />
+        <Route path="/site-visits" element={<SiteVisitsPage />} />
+        <Route path="/testing" element={<TestingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        {PLANNED_PAGES.map((page) => (
-          <Route key={page.path} path={page.path} element={<PlannedModule title={page.title} items={page.items} />} />
-        ))}
+        <Route path="/users" element={<UsersPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

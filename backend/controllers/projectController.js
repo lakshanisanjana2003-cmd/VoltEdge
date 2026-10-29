@@ -2,15 +2,18 @@ import Client from "../models/Client.js";
 import Professional from "../models/Professional.js";
 import Project from "../models/Project.js";
 import { isValidId, validateProject } from "../utils/validation.js";
+import Drawing from "../models/Drawing.js";
+import SiteVisit from "../models/SiteVisit.js";
+import TestRecord from "../models/TestRecord.js";
 
 const NOT_FOUND = { message: "Project not found." };
 
-// Makes a search word safe to use in a MongoDB regular expression.
+// Makes a search word safe to use in MongoDB regular expression.
 function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Checks things that need the database: the project ID is unused, and the chosen
+
 // client / professionals exist. Adds any problems to "errors".
 async function checkDatabaseRules(data, errors, currentId) {
   if (!errors.project_code) {
@@ -38,7 +41,7 @@ function findFullProject(id) {
 export async function getProjects(req, res) {
   const { q, status, building_type, start_from, sort } = req.query;
 
-  // Build the MongoDB filter from the search box and drop-downs.
+  // Build MongoDB filter from search box and drop-downs.
   const filter = {};
   if (q) {
     const pattern = new RegExp(escapeRegex(String(q).trim()), "i"); // "i" = ignore upper/lower case
@@ -54,7 +57,7 @@ export async function getProjects(req, res) {
   if (sort === "name") sortBy = { name: 1 };
   if (sort === "deadline") sortBy = { expected_completion_date: 1 };
 
-  const projects = await Project.find(filter).sort(sortBy).populate("client", "name").populate("design_engineer", "name");
+  const projects = await Project.find(filter).sort(sortBy).populate("client", "name client_id").populate("design_engineer", "name professional_id");
   res.json(projects);
 }
 
@@ -78,7 +81,7 @@ export async function createProject(req, res) {
   res.status(201).json(await findFullProject(project._id));
 }
 
-// PUT /api/projects/:id   (the form sends every field, so all fields are replaced)
+// PUT /api/projects/:id   (form sends every field, so all fields are replaced)
 export async function updateProject(req, res) {
   if (!isValidId(req.params.id)) return res.status(404).json(NOT_FOUND);
   const project = await Project.findById(req.params.id);
@@ -90,7 +93,7 @@ export async function updateProject(req, res) {
     return res.status(400).json({ message: "Please correct the highlighted fields.", errors });
   }
 
-  project.set(data); // created_by is not in "data", so it stays the same
+  project.set(data); // created_by is not in "data", so it stay same
   await project.save();
   res.json(await findFullProject(project._id));
 }
@@ -98,6 +101,14 @@ export async function updateProject(req, res) {
 // DELETE /api/projects/:id
 export async function deleteProject(req, res) {
   if (!isValidId(req.params.id)) return res.status(404).json(NOT_FOUND);
+   // A project still has drawings, site visits or test records cannot be delete.
+  const inUse =
+    (await Drawing.exists({ project: req.params.id })) ||
+    (await SiteVisit.exists({ project: req.params.id })) ||
+    (await TestRecord.exists({ project: req.params.id }));
+  if (inUse) {
+    return res.status(400).json({ message: "This project still has drawings, site visits or test records. Delete them first." });
+  }
   const deleted = await Project.findByIdAndDelete(req.params.id);
   if (!deleted) return res.status(404).json(NOT_FOUND);
   res.status(204).end();

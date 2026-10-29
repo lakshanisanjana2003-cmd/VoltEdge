@@ -14,13 +14,16 @@ async function startServer() {
     process.exit(1);
   }
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+  family: 4,
+  serverSelectionTimeoutMS: 10000,
+});
     console.log("Connected to MongoDB");
-    app.listen(port, () => console.log(`EDOMS API running at http://localhost:${port}/api`));
+    app.listen(port, () => console.log(`VoltEdge API running at http://localhost:${port}/api`));
   } catch (error) {
-    console.error("Could not connect to MongoDB:", error.message);
-    process.exit(1);
-  }
+  console.error("MongoDB connection error:", error);
+  process.exit(1);
+}
 }
 
 startServer();

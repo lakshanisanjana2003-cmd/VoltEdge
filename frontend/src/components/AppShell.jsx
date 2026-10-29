@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, FolderKanban, Building2, Users, FileStack, MapPin, Gavel,
-  PackageCheck, ClipboardCheck, Wallet, Settings, Zap, Menu, Search, Bell, LogOut,
+  LayoutDashboard, FolderKanban, Building2, Users, FileStack, MapPin, ClipboardCheck,
+  Settings, ShieldCheck, Zap, Menu, Search, Bell, LogOut,
 } from "lucide-react";
-import { getMyProfile, listProjects, signOut } from "@/lib/api";
+import { getMyProfessional, getMyProfile, listProjects, signOut } from "@/lib/api";
 import { summarizeProjects } from "@/lib/projectHelpers";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -18,15 +18,15 @@ const NAV_ITEMS = [
   { to: "/professionals", label: "Professionals", icon: Users },
   { to: "/drawings", label: "Drawings and Documents", icon: FileStack },
   { to: "/site-visits", label: "Site Visits", icon: MapPin },
-  { to: "/tenders", label: "Tender and Bidding", icon: Gavel },
-  { to: "/material-approvals", label: "Material Approvals", icon: PackageCheck },
   { to: "/testing", label: "Testing and Certification", icon: ClipboardCheck },
-  { to: "/payments", label: "Payments", icon: Wallet },
   { to: "/settings", label: "Settings / About", icon: Settings },
 ];
 
-// The navigation menu (used in the sidebar and in the mobile menu).
-function SidebarNav({ onNavigate }) {
+// Shown only to administrators.
+const ADMIN_NAV_ITEM = { to: "/users", label: "User Accounts", icon: ShieldCheck };
+
+// The navigation menu.
+function SidebarNav({ items, onNavigate }) {
   const { pathname } = useLocation();
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -35,7 +35,7 @@ function SidebarNav({ onNavigate }) {
         <span className="font-semibold tracking-wide text-sidebar-accent-foreground">VoltEdge</span>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-        {NAV_ITEMS.map((item) => {
+         {items.map((item) => {
           const active = pathname.startsWith(item.to);
           return (
             <Link
@@ -57,21 +57,22 @@ function SidebarNav({ onNavigate }) {
   );
 }
 
-// The frame around every page: sidebar, top bar and the page itself (<Outlet />).
+// The frame around every page
 export function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [profile, setProfile] = useState(null);
   const [overdueCount, setOverdueCount] = useState(0);
+  const [profile, setProfile] = useState(null);
+  const [hasProfessionalProfile, setHasProfessionalProfile] = useState(true); // true until we know, so the banner does not flash
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // Load the signed-in staff member once.
+  // Load signed-in staff member once.
   useEffect(() => {
     getMyProfile().then(setProfile).catch(() => {});
   }, []);
 
-  // Count overdue projects for the bell. Reload when the page changes, so the number stays fresh.
+  // Count overdue projects for bell. Reload when page changes, so number stays fresh.
   useEffect(() => {
     listProjects()
       .then((projects) => {
@@ -81,7 +82,15 @@ export function AppShell() {
       .catch(() => {});
   }, [pathname]);
 
-  const currentPage = NAV_ITEMS.find((item) => pathname.startsWith(item.to));
+    // Show reminder if this user has no professional profile
+  useEffect(() => {
+    getMyProfessional()
+      .then((found) => setHasProfessionalProfile(Boolean(found)))
+      .catch(() => {});
+  }, [pathname]);
+
+  const navItems = profile?.role === "admin" ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
+  const currentPage = navItems.find((item) => pathname.startsWith(item.to));
 
   function handleSearch(event) {
     event.preventDefault();
@@ -96,12 +105,12 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 lg:block">
-        <SidebarNav />
+        <SidebarNav items={navItems} />
       </aside>
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-64 border-0 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarNav onNavigate={() => setMobileMenuOpen(false)} />
+          <SidebarNav items={navItems} onNavigate={() => setMobileMenuOpen(false)} />
         </SheetContent>
       </Sheet>
 
@@ -143,7 +152,13 @@ export function AppShell() {
             VoltEdge <span className="mx-1">/</span> {currentPage?.label ?? ""}
             {pathname.split("/").length > 2 && <span> / Details</span>}
           </p>
-          <Outlet />
+                    {!hasProfessionalProfile && pathname !== "/settings" && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed bg-card p-3 text-sm">
+              <span>You have no professional profile yet.</span>
+              <Link to="/settings" className="font-medium underline">Create your professional profile</Link>
+            </div>
+          )}
+          <Outlet context={{ profile }} />
         </main>
       </div>
     </div>

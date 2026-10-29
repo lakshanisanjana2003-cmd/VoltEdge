@@ -3,12 +3,7 @@ import { BUILDING_TYPES, PROJECT_PRIORITIES, PROJECT_STATUSES } from "../utils/c
 
 const text = { type: String, trim: true, default: null }; // optional text field
 
-// RELATIONSHIPS (each one stores the _id of a document in another collection):
-//   client          -> Client        (one client can have many projects)
-//   design_engineer -> Professional
-//   draughtsman     -> Professional
-//   created_by      -> User
-// The controller uses .populate() to replace these ids with the real documents.
+
 const projectSchema = new mongoose.Schema(
   {
     project_code: { type: String, required: true, unique: true, uppercase: true, trim: true },

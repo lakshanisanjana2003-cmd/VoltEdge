@@ -1,4 +1,7 @@
-import { BUILDING_TYPES, PROFESSIONAL_ROLES, PROJECT_PRIORITIES, PROJECT_STATUSES } from "./constants.js";
+import {
+  BUILDING_TYPES, DOCUMENT_TYPES, DRAWING_STATUSES, PROFESSIONAL_ROLES, PROJECT_PRIORITIES,
+  PROJECT_STATUSES, TEST_RESULTS, VISIT_STATUSES,
+} from "./constants.js";
 
 // Each validate function returns { errors, data }.
 //   errors - one message per bad field, for example { name: "Name is required." }
@@ -16,7 +19,7 @@ export function isValidId(id) {
   return typeof id === "string" && /^[a-f0-9]{24}$/i.test(id);
 }
 
-// "2026-06-01" is valid, "2026-13-45" is not.
+// "2026-06-01" is valid
 function isRealDate(text) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
   const date = new Date(`${text}T00:00:00Z`);
@@ -46,7 +49,7 @@ export function validateProject(body = {}) {
   const priority = cleanText(body.priority) || "Not recorded";
   if (!PROJECT_PRIORITIES.includes(priority)) errors.priority = "Unknown priority.";
 
-  // Dates arrive as "YYYY-MM-DD" text.
+  
   const dates = {};
   for (const field of ["start_date", "expected_completion_date", "actual_completion_date"]) {
     dates[field] = cleanText(body[field]);
@@ -61,7 +64,7 @@ export function validateProject(body = {}) {
     errors.actual_completion_date = "Enter the completion date for a completed project.";
   }
 
-  // Links to other collections.
+  // Links other collections.
   const links = {};
   for (const field of ["client", "design_engineer", "draughtsman"]) {
     links[field] = cleanText(body[field]);
@@ -84,7 +87,7 @@ export function validateProject(body = {}) {
     main_contractor: cleanText(body.main_contractor),
     notes: cleanText(body.notes),
   };
-  // Turn the date text into real dates for MongoDB.
+  // Turn into real dates.
   for (const field of Object.keys(dates)) {
     data[field] = dates[field] && !errors[field] ? new Date(`${dates[field]}T00:00:00Z`) : null;
   }
@@ -156,4 +159,98 @@ export function validateLogin(body = {}) {
   if (!officer_id) errors.officer_id = "Enter your Officer ID or staff number.";
   if (!password) errors.password = "Enter your password.";
   return { errors, data: { officer_id, password } };
+}
+
+
+function readLink(body, field, errors, required) {
+  const value = cleanText(body[field]);
+  if (!value) {
+    if (required) errors[field] = "Please choose one.";
+    return null;
+  }
+  if (!isValidId(value)) {
+    errors[field] = "Invalid selection.";
+    return null;
+  }
+  return value;
+}
+
+// Reads a date 
+function readDate(body, field, errors, required) {
+  const value = cleanText(body[field]);
+  if (!value) {
+    if (required) errors[field] = "Enter a date.";
+    return null;
+  }
+  if (!isRealDate(value)) {
+    errors[field] = "Enter a valid date (YYYY-MM-DD).";
+    return null;
+  }
+  return new Date(`${value}T00:00:00Z`);
+}
+
+export function validateSiteVisit(body = {}) {
+  const errors = {};
+  const data = {
+    project: readLink(body, "project", errors, true),
+    visit_date: readDate(body, "visit_date", errors, true),
+    visited_by: readLink(body, "visited_by", errors, false),
+    purpose: cleanText(body.purpose),
+    inspection_notes: cleanText(body.inspection_notes),
+    follow_up_actions: cleanText(body.follow_up_actions),
+    status: cleanText(body.status) || "Scheduled",
+  };
+  if (!VISIT_STATUSES.includes(data.status)) errors.status = "Unknown status.";
+  return { errors, data };
+}
+
+export function validateTestRecord(body = {}) {
+  const errors = {};
+  const test_type = cleanText(body.test_type);
+  if (!test_type || test_type.length < 3) errors.test_type = "Test type is required (for example Insulation resistance).";
+  const result = cleanText(body.result) || "Pending";
+  if (!TEST_RESULTS.includes(result)) errors.result = "Unknown result.";
+  const data = {
+    project: readLink(body, "project", errors, true),
+    test_type,
+    test_date: readDate(body, "test_date", errors, true),
+    tested_by: readLink(body, "tested_by", errors, false),
+    result,
+    measurements: cleanText(body.measurements),
+    remarks: cleanText(body.remarks),
+    certificate_number: cleanText(body.certificate_number),
+    certificate_date: readDate(body, "certificate_date", errors, false),
+  };
+  return { errors, data };
+}
+
+export function validateDrawing(body = {}) {
+  const errors = {};
+  const drawing_number = (cleanText(body.drawing_number) || "").toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9./-]{2,29}$/.test(drawing_number)) {
+    errors.drawing_number = "Use 3–30 letters, numbers, dots, slashes or dashes.";
+  }
+  const title = cleanText(body.title);
+  if (!title || title.length < 3) errors.title = "Title is required (at least 3 characters).";
+  const document_type = cleanText(body.document_type) || "Drawing";
+  if (!DOCUMENT_TYPES.includes(document_type)) errors.document_type = "Unknown type.";
+  const status = cleanText(body.status) || "Draft";
+  if (!DRAWING_STATUSES.includes(status)) errors.status = "Unknown status.";
+  const data = {
+    project: readLink(body, "project", errors, true),
+    drawing_number,
+    title,
+    document_type,
+    status,
+    notes: cleanText(body.notes),
+  };
+  return { errors, data };
+}
+
+export function validateRevision(body = {}) {
+  const errors = {};
+  const revision = (cleanText(body.revision) || "").toUpperCase();
+  if (!/^[A-Z0-9-]{1,10}$/.test(revision)) errors.revision = "Use 1–10 letters, numbers or dashes, for example A or 01.";
+  const revision_date = readDate(body, "revision_date", errors, true);
+  return { errors, data: { revision, revision_date, description: cleanText(body.description) } };
 }

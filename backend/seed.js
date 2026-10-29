@@ -4,10 +4,7 @@ import Client from "./models/Client.js";
 import Professional from "./models/Professional.js";
 import Project from "./models/Project.js";
 
-// Adds a few DEMO records so the screens are not empty.
-//   npm run seed             adds data only when there are no projects yet
-//   npm run seed -- --reset  deletes all clients, professionals and projects first
-// Staff accounts are not touched. Register on the sign-in page.
+
 async function seed() {
   await mongoose.connect(process.env.MONGODB_URI);
 
@@ -30,10 +27,10 @@ async function seed() {
     phone: "0779876543", email: "info@lakeview.example", address: "Kandy",
   });
   const engineer = await Professional.create({
-    name: "Demo: Eng. Nimal Fernando", role: "Electrical Design Engineer", organization: "EDOMS Office",
+    name: "Demo: Eng. Nimal Fernando", role: "Electrical Design Engineer", organization: "VoltEdge Office",
   });
   const draughtsman = await Professional.create({
-    name: "Demo: Kasun Jayasinghe", role: "Draughtsman", organization: "EDOMS Office",
+    name: "Demo: Kasun Jayasinghe", role: "Draughtsman", organization: "VoltEdge Office",
   });
 
   await Project.create({

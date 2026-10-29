@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 
-// Maps a project status or priority to a coloured badge.
+// Maps project status /priority to coloured badge.
 const statusVariant = {
   Planned: "muted",
   Ongoing: "info",

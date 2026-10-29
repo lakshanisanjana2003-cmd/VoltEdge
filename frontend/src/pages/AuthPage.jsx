@@ -8,15 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Sign in / register page for office staff.
+// Sign in / register 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("signin"); // "signin" or "register"
+  const [mode, setMode] = useState("signin"); // signin / register
   const [fullName, setFullName] = useState("");
   const [officerId, setOfficerId] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [createdUser, setCreatedUser] = useState(null); // set after a successful registration
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -27,10 +28,14 @@ export default function AuthPage() {
 
     setBusy(true);
     try {
-      if (mode === "signin") await signIn(officerId.trim(), password);
-      else await registerStaff(fullName.trim(), officerId.trim(), password);
-      toast.success(mode === "signin" ? "Welcome back" : "Account created");
-      navigate("/dashboard");
+           if (mode === "signin") {
+        await signIn(officerId.trim(), password);
+        toast.success("Welcome back");
+        navigate("/dashboard");
+      } else {
+        // The server generates the staff ID. We show it before the user continues.
+        setCreatedUser(await registerStaff(fullName.trim(), officerId.trim(), password));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -41,6 +46,23 @@ export default function AuthPage() {
   function switchMode() {
     setMode(mode === "signin" ? "register" : "signin");
     setError("");
+  }
+
+  // After registering, show the staff ID that was generated automatically.
+  if (createdUser) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="w-full max-w-sm space-y-4 text-center">
+          <h2 className="text-2xl font-semibold">Account created</h2>
+          <p className="text-sm text-muted-foreground">Your staff ID was generated automatically:</p>
+          <p className="font-mono text-5xl font-semibold" aria-label="Your staff ID">{createdUser.staff_code}</p>
+          <p className="text-sm text-muted-foreground">
+            You can sign in with this staff ID or with your Officer ID ({createdUser.officer_id}).
+          </p>
+          <Button className="w-full" onClick={() => navigate("/dashboard")}>Continue to the dashboard</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -94,6 +116,11 @@ export default function AuthPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
+                    {mode === "register" && (
+            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+              Your staff ID (for example U07) is generated automatically when you register. You do not need to enter it.
+            </p>
+          )}
 
           {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
 

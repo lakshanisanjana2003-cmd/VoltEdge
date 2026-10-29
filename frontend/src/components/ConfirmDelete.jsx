@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
-// A delete button that always asks for confirmation first.
+// A delete button always asks confirmation first.
 export function ConfirmDelete({ itemName, onConfirm }) {
   return (
     <AlertDialog>

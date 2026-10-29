@@ -1,17 +1,30 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-// Put this before any route that needs a signed-in staff member.
-// The React app sends the header:  Authorization: Bearer <token>
-export function requireLogin(req, res, next) {
+// The React app sends header:  Authorization: Bearer <token>
+export async function requireLogin(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
   if (!token) return res.status(401).json({ message: "Please sign in." });
 
+  let payload;
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET); // throws if fake or expired
-    req.user = { id: payload.userId };
-    next();
+    payload = jwt.verify(token, process.env.JWT_SECRET); // throws if fake or expired
   } catch {
-    res.status(401).json({ message: "Your session has expired. Please sign in again." });
+    return res.status(401).json({ message: "Your session has expired. Please sign in again." });
   }
+
+  // role is read from database every time, so role change works at once.
+  const user = await User.findById(payload.userId);
+  if (!user) return res.status(401).json({ message: "Please sign in." });
+  req.user = { id: String(user._id), role: user.role || "staff" };
+  next();
+}
+
+
+export function requireAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Only an administrator can do this." });
+  }
+  next();
 }

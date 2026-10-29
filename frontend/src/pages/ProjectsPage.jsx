@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { deleteProject, listProjects } from "@/lib/api";
 import { BUILDING_TYPES, PROJECT_STATUSES } from "@/lib/constants";
-import { nextProjectCode, onlyDate } from "@/lib/projectHelpers";
+import { nameWithId, nextProjectCode, onlyDate } from "@/lib/projectHelpers";
 import { PageHeader, EmptyState } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
@@ -165,7 +165,7 @@ export default function ProjectsPage() {
                   <TableCell>
                     <Link to={`/projects/${project._id}`} className="font-medium hover:underline">{project.name}</Link>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{project.client?.name ?? "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell">{nameWithId(project.client) || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">{project.building_type}</TableCell>
                   <TableCell className="hidden whitespace-nowrap font-mono text-xs md:table-cell">
                     {onlyDate(project.expected_completion_date) || "—"}

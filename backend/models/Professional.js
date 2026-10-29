@@ -11,6 +11,8 @@ const professionalSchema = new mongoose.Schema(
     phone: { type: String, trim: true, default: null },
     email: { type: String, trim: true, default: null },
     notes: { type: String, trim: true, default: null },
+        // The login account profile belongs to. Only "my profile" route set it.
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true, sparse: true },
   },
   { versionKey: false, timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

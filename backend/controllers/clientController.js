@@ -4,7 +4,7 @@ import { isValidId, validateClient } from "../utils/validation.js";
 
 const NOT_FOUND = { message: "Client not found." };
 
-// True if a different client already uses this client_id.
+// True if different client already uses this id.
 async function clientIdIsTaken(clientId, currentId) {
   if (!clientId) return false;
   const other = await Client.findOne({ client_id: clientId });
