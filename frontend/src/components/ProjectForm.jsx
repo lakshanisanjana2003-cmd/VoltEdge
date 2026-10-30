@@ -37,7 +37,7 @@ function projectToForm(project, suggestedCode) {
   };
 }
 
-// Add / edit project form "project" is empty adding a project.
+// Add / edit project form "project" is empty adding project.
 export function ProjectForm({ project, suggestedCode, onClose, onSaved }) {
   const [values, setValues] = useState(projectToForm(project, suggestedCode));
   const [errors, setErrors] = useState({});

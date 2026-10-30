@@ -13,7 +13,7 @@ async function clientIdIsTaken(clientId, currentId) {
 
 // GET /api/clients
 export async function getClients(req, res) {
-  res.json(await Client.find().sort({ name: 1 }));
+  res.json(await Client.find().sort({ client_id: 1 }).collation({ locale: "en", numericOrdering: true }));
 }
 
 // POST /api/clients

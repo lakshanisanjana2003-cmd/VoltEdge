@@ -12,7 +12,7 @@ export async function getUsers(req, res) {
   res.json(users.map(publicUser));
 }
 
-// PUT /api/users/:id/role   { role: "admin" or "staff" }   (administrators only)
+// PUT /api/users/:id/role   { role: "admin" or "staff" }
 export async function changeUserRole(req, res) {
   if (!isValidId(req.params.id)) return res.status(404).json({ message: "User not found." });
   if (!["admin", "staff"].includes(req.body.role)) {

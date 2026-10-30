@@ -125,7 +125,7 @@ export async function addRevision(req, res) {
   res.status(201).json(await findDrawing(drawing._id));
 }
 
-// GET /api/drawings/:id/revisions/:revisionId/file   (download)
+// GET /api/drawings/:id/revisions/:revisionId/file 
 export async function downloadRevision(req, res) {
   if (!isValidId(req.params.id) || !isValidId(req.params.revisionId)) return res.status(404).json(NOT_FOUND);
   const drawing = await Drawing.findById(req.params.id);

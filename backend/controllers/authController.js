@@ -14,8 +14,8 @@ function makeToken(user) {
 }
 
 // Gives each new staff member the next staff ID: U01, U02, U03 ...
-// The number comes from a counter in the database that is increased in ONE atomic step,
-// so two people registering at the same time can never get the same ID.
+// The number comes from a counter
+// if two people registering at same time can never have same ID.
 async function nextStaffCode() {
   // First time only: start the counter at the highest number already used, so old IDs are kept.
   if (!(await Counter.exists({ _id: "staff_code" }))) {
@@ -44,10 +44,10 @@ export async function register(req, res) {
     return res.status(400).json({ message: alreadyRegistered, errors: { officer_id: alreadyRegistered } });
   }
 
-  const password_hash = await bcrypt.hash(data.password, 10); // never save the real password
+  const password_hash = await bcrypt.hash(data.password, 10); // never save real password.use hashing
 
   // The database has unique indexes as a second safety net. If the staff ID is somehow taken,
-  // the counter has already moved on, so we simply try again with the next number.
+  // the counter moved on,and then simply try again with the next number.
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       const user = await User.create({
@@ -60,7 +60,7 @@ export async function register(req, res) {
     } catch (error) {
       if (error.code !== 11000) throw error;
       if (error.keyPattern?.officer_id || /officer_id/.test(error.message)) {
-        // Two people used the same Officer ID at the same moment.
+        // Two people used the same Officer ID at same time
         return res.status(400).json({ message: alreadyRegistered, errors: { officer_id: alreadyRegistered } });
       }
     }

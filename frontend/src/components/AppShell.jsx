@@ -72,7 +72,7 @@ export function AppShell() {
     getMyProfile().then(setProfile).catch(() => {});
   }, []);
 
-  // Count overdue projects for bell. Reload when page changes, so number stays fresh.
+  // Count overdue projects for bell. Reload when page changes so number stays fresh.
   useEffect(() => {
     listProjects()
       .then((projects) => {

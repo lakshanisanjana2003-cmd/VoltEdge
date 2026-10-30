@@ -14,7 +14,7 @@ async function professionalIdIsTaken(professionalId, currentId) {
 
 // GET /api/professionals
 export async function getProfessionals(req, res) {
-  res.json(await Professional.find().sort({ name: 1 }));
+     res.json(await Professional.find().sort({ professional_id: 1 }).collation({ locale: "en", numericOrdering: true }));
 }
 
 // POST /api/professionals

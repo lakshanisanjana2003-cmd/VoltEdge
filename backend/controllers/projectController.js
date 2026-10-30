@@ -8,7 +8,7 @@ import TestRecord from "../models/TestRecord.js";
 
 const NOT_FOUND = { message: "Project not found." };
 
-// Makes a search word safe to use in MongoDB regular expression.
+
 function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
