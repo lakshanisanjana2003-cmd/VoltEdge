@@ -71,27 +71,46 @@ In the app, **Drawings and Documents is one module**. The document side is cover
 | Open User Accounts page / change roles | No | Yes (cannot change own role) |
 
 ---
-
 ## 3. Requirements
 
-* Node.js 18 or newer
-* MongoDB running on your computer (MongoDB Community Server) **or** a free MongoDB Atlas connection string
+- Node.js 18 or newer.
+- MongoDB Atlas account and a configured database connection string.
+- Internet connection to access MongoDB Atlas.
+- Visual Studio Code (recommended).
+- MongoDB Compass (optional, for viewing and managing database collections).
+
 
 ## 4. How to run it in Visual Studio Code
 
 Open the project folder in VS Code. Open **two terminals** (Terminal → New Terminal).
 
-**Terminal 1 – backend**
+**Terminal 1 – Backend**
+
 ```bash
 cd backend
 npm install
 ```
-Copy `.env.example` to `.env` (Windows: `copy .env.example .env`). Open `.env` and change `JWT_SECRET` to any long random text. Check that `MONGODB_URI` matches your MongoDB (the default database name is `edoms`).
-```bash
-npm run seed      
-npm run dev       # API runs at http://localhost:5000/api
+
+Copy `.env.example` to `.env` (Windows: `copy .env.example .env`).
+
+Open the `.env` file and configure:
+
+```env
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_long_random_secret
+CLIENT_ORIGIN=http://localhost:5173
+PORT=5000
 ```
-You should see `Connected to MongoDB`.
+
+Replace the MongoDB URI with your own MongoDB Atlas connection string. Make sure the database name is included in the connection string.
+
+Start the backend:
+
+```bash
+npm run dev
+```
+
+The API runs at `http://localhost:5000/api`. You should see `Connected to MongoDB` when the database connection is successful.
 
 **Terminal 2 – frontend**
 ```bash
@@ -128,7 +147,9 @@ The same steps work for any module. Projects are shown as the main example.
 6. **Persistence – refresh:** press F5. The project is still there.
 7. **Persistence – restart:** stop the backend (Ctrl+C in terminal 1), start it again with `npm run dev`, reload the page. The project is still there.
 8. **Delete:** click the bin icon → confirm *Delete*. The project is removed, and stays removed after a refresh.
-9. **Look in MongoDB:** open MongoDB Compass, connect to `mongodb://127.0.0.1:27017`, open the database named in your `MONGODB_URI` (default `edoms`) → collection `projects`. You can see the same documents.
+9. **Look in MongoDB Atlas:** Sign in to MongoDB Atlas, open the project and cluster used by VoltEdge, and select the database specified in `MONGODB_URI`. Open the `projects` collection to view the project documents stored by the application.
+
+   **Optional:** MongoDB Compass can also be used to connect to the same Atlas cluster and view the collections.
 
 Stage 2 checks:
 * **Drawings:** Drawings and Documents → *Add drawing* → choose a project, enter a drawing number and title, attach a PDF. The PDF becomes revision **A**. Use the revisions icon to upload revision B and to download a file.
